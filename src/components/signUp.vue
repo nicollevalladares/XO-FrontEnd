@@ -2,8 +2,8 @@
   <div id="signup">
     <div class="container">
       <form>
-        <div class="row">
-          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+        <div>
+          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 center">
             <h1>Signup</h1>
             <hr>
             <div class="form-group">
@@ -17,10 +17,13 @@
             </div>
           </div>
 
+          
         </div>
 
-        <div class="row">
-          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+        <p class="feedback">{{feedback}}</p>
+
+        <div>
+          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 center">
             <button class="btn btn-primary" @click.prevent="signup">Registrarse
             </button>
           </div>
