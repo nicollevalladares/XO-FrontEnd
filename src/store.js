@@ -4,6 +4,7 @@ import firebase from 'firebase'
 import axios from 'axios'
 import server from '../config/server'
 import router from './router';
+import serve from '../config/server';
 
 Vue.use(Vuex)
 
@@ -18,25 +19,27 @@ var firebaseConfig = {
 };
 
 // Initialize firebase
-firebase.initializeApp(firebaseConfig)
+firebase.initializeApp(firebaseConfig);
 
 export default new Vuex.Store({
     state:{
         user: '',
         feedback: '',
-        exists: false
+        exists: false,
+        gameInfo: '',
+        gameSession: ''
     },
     mutations: {
-        setUser(state, payload){
-            state.user = payload;
+        setGame(state, game){
+            state.gameInfo = game;
+        },
+        setGameSession(state, gameSession){
+            state.gameSession = gameSession;
         }
     },
     actions: {
-        detectUser({commit}, payload){
-            commit('setUser', payload)
-        },
         signup({commit, state}, payload){
-            if(payload.username && payload.name){
+            if(payload.username && payload.name && payload.idGame){
                 state.feedback = '';
 
                 axios.get(`${server.mainServe}/users`)
@@ -54,9 +57,97 @@ export default new Vuex.Store({
                             username: payload.username
                         })
                         .then(response => {
-                            console.log(response.data);
-                            
-                            router.push({path: `/game/${response.data.id}`})
+                            axios.get(`${server.mainServe}/users/${response.data.id}`)
+                            .then(response => {
+                                axios.put(`${server.mainServe}/games/edit/${payload.idGame}`, {
+                                    guest: response.data.user.username
+                                })
+                                .then(response => {
+                                    axios.post(`${server.mainServe}/gameSessions`, {
+                                        idGame: payload.idGame,
+                                        number: '1',
+                                        matrix: [
+                                            //00 01 02
+                                            [{
+                                                position: '00',
+                                                text: ' '
+                                            }, 
+                                            {
+                                                position: '01',
+                                                text: ' '
+                                            },
+                                            {
+                                                position: '02',
+                                                text: ' '
+                                            }], 
+                                            //10 11 12
+                                            [{
+                                                position: '10',
+                                                text: ' '
+                                            }, 
+                                            {
+                                                position: '11',
+                                                text: ' '
+                                            },
+                                            {
+                                                position: '12',
+                                                text: ' '
+                                            }], 
+                                            //20 21 22
+                                            [{
+                                                position: '20',
+                                                text: ' '
+                                            }, 
+                                            {
+                                                position: '21',
+                                                text: ' '
+                                            },
+                                            {
+                                                position: '22',
+                                                text: ' '
+                                            }]
+                                        ]
+                                    })
+                                    .then(response => {
+                                        router.push({path: `/game/${payload.idGame}`})
+                                    })
+                                })
+                            })
+                        })
+                        .catch(err => {
+                            console.log(err);
+                        })
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                    
+                })
+            }
+            else if(payload.username && payload.name){
+                state.feedback = '';
+
+                axios.get(`${server.mainServe}/users`)
+                .then(response => {
+                    response.data.forEach(user => {
+                        if(user.username == payload.username){
+                            state.feedback = 'Usuario ya registrado, ingrese otro.';
+                            state.exists = true;
+                        }
+                    })
+
+                    if(!state.exists){
+                        axios.post(`${server.mainServe}/users`, {
+                            name: payload.name,
+                            username: payload.username
+                        })
+                        .then(response => {
+                            axios.post(`${server.mainServe}/games`, {
+                                owner: payload.username
+                            })
+                            .then(res => {
+                                router.push({path: `/game/${res.data.id}`})
+                            })
                         })
                         .catch(err => {
                             console.log(err);
@@ -72,9 +163,28 @@ export default new Vuex.Store({
             else{
                 state.feedback = 'Por favor debe llenar todos los campos.';
             }
+        },
+        getGame({commit}, payload){
+            axios.get(`${server.mainServe}/games/${payload.id}`)
+            .then(response => {
+                var game = response.data.game;
+                commit('setGame', game);
+            })
+        },
+        getGameSession({commit}, payload){
+            axios.get(`${server.mainServe}/gameSessions`)
+            .then(response => {
+                response.data.forEach(session => {
+                    if(session.idGame == payload.id){
+                        var gameSession = session;
+                        commit('setGameSession', gameSession);
+                    }
+                })
+                
+            })
         }
     },
     getters: {
         
     }
-})
+});

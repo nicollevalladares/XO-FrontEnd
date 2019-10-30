@@ -1,0 +1,25 @@
+.gamebox button {
+  width: 200px;
+  height: 200px;
+  border: 1px solid #bdbdbd;
+  display: inline-block;
+  font-size: 50px;
+  color: #040404;
+}
+
+.gamebox {
+  max-width: 600px;
+  display: grid;
+  justify-items: center;
+  align-content: space-around;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.replay {
+  border: 1px solid #ddd;
+  height: 60px;
+  padding: 10px;
+}

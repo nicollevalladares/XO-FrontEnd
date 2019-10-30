@@ -1,5 +1,5 @@
 import { mapActions, mapState } from 'vuex';
-import store from '@/store'
+import store from '@/store';
 
 export default {
     name: 'signUp',
@@ -7,17 +7,28 @@ export default {
         return {
             userData: {
                 name: '',
-                username: ''
+                username: '',
+                id: this.$route.params.id
             }
         }
     },
     methods: {
         ...mapActions([]),
         signup() {
-            store.dispatch('signup', {
-                name: this.userData.name,
-                username: this.userData.username
-            })
+            if(this.$route.params.id){
+                store.dispatch('signup', {
+                    name: this.userData.name,
+                    username: this.userData.username,
+                    idGame: this.$route.params.id
+                })
+            }
+            else{
+                store.dispatch('signup', {
+                    name: this.userData.name,
+                    username: this.userData.username
+                })
+            }
+            
         }
     },
     created(){
