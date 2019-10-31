@@ -7,8 +7,7 @@ export default {
         return {
             userData: {
                 name: '',
-                username: '',
-                id: this.$route.params.id
+                username: ''
             }
         }
     },

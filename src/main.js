@@ -5,12 +5,24 @@ import BootstrapVue from "bootstrap-vue"
 import App from './App'
 import router from './router'
 import store from './store'
+import VueSocketIO from 'vue-socket.io'
+import serve from '../config/server'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 Vue.use(BootstrapVue)
 Vue.config.productionTip = false
+
+Vue.use(new VueSocketIO({
+  debug: true,
+  connection: `${serve.mainServe}`,
+  vuex: {
+      store,
+      actionPrefix: 'SOCKET_',
+      mutationPrefix: 'SOCKET_'
+  }
+}))
 
 /* eslint-disable no-new */
 new Vue({

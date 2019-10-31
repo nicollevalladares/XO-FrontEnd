@@ -1,7 +1,7 @@
 import Player from "../../Player";
 import Game from "../../Game";
 import { mapActions, mapState } from 'vuex';
-// import store from '@/store';
+import store from '@/store';
 
 const game = new Game();
 game.players.push(new Player("X"));
@@ -15,26 +15,47 @@ export default {
             game: game,
             buttons: [],
             btnText: [],
-            link: `/signup/${this.$route.params.id}`
+            link: `/signup/${this.$route.params.id}`,
+            id:  this.$route.params.id
         }
     },
     methods: {
         ...mapActions(['getGame', 'getGameSession']),
         onClick($event) {
         let btn = $event.target;
-        
-        //check if filled already
-        if (this.btnText[btn.id].length > 0) {
-            alert("Already filled");
-            return;
-        }
+        let text = this.game.currentTurn;
 
         //fill X/O
 
-        //AQUI DEBO MODIFICAR LA MATRIZ EN LA BD 
+        const newMatrix = []
+        for (let i = 0; i < 3; i++) {
+            var column = document.getElementById(i).childNodes;
+            const matrix = []
+            column.forEach(data => {
+                if(data.id == btn.id){
+                    var info = {
+                        position: data.id,
+                        text
+                    }
+                    matrix.push(info)
+                }
+                else{ 
+                    var info = {
+                        position: data.id,
+                        text: data.innerText
+                    }
+                    matrix.push(info)    
+                }
+            })
+            newMatrix.push(matrix)
+        }
+        
+        store.dispatch('updateMatrix', {
+            data: newMatrix,
+            id: this.gameSession.id
+        })
 
-        this.btnText[btn.id] = this.game.currentTurn;
-        this.game.changeTurn();
+        this.game.changeTurn(this.gameSession.id);
 
         //check if game won
         setTimeout(() => {
@@ -47,7 +68,7 @@ export default {
         //UI reset
         this.game.reset();
         [...this.buttons].forEach(btn => {
-            this.btnText[btn.id] = "";
+            // this.btnText[btn.id] = "";
         });
         }
     },
@@ -60,12 +81,12 @@ export default {
     },
     created(){
         this.getGame({id: this.$route.params.id}),
-        this.getGameSession({id: this.$route.params.id})
-        // setInterval(function(){ 
-        //     window.location.reload();
-        // }, 3000)
+        this.getGameSession({id: this.$route.params.id}),
+        this.sockets.subscribe('sessionUpdate', (data) => {
+            store.dispatch('socketMatrix',{matrix: data.matrix })
+        });
     },
     computed: {
-        ...mapState(['gameInfo', 'gameSession'])
+        ...mapState(['gameInfo', 'gameSession', 'matrix', 'turn'])
     }
 };

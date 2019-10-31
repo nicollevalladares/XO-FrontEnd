@@ -24,7 +24,11 @@
 
         <div>
           <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 center">
-            <button class="btn btn-primary" @click.prevent="signup">Registrarse
+            <button 
+              class="btn btn-primary" 
+              @click.prevent="signup"
+            >
+              Registrarse
             </button>
           </div>
         </div>
@@ -35,5 +39,4 @@
 
 <script src="./js/signUp.js"></script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped src="./css/signUp.css"></style>

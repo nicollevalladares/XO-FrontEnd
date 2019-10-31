@@ -4,7 +4,6 @@ import firebase from 'firebase'
 import axios from 'axios'
 import server from '../config/server'
 import router from './router';
-import serve from '../config/server';
 
 Vue.use(Vuex)
 
@@ -27,7 +26,9 @@ export default new Vuex.Store({
         feedback: '',
         exists: false,
         gameInfo: '',
-        gameSession: ''
+        gameSession: '',
+        matrix: '',
+        turn: ''
     },
     mutations: {
         setGame(state, game){
@@ -35,10 +36,16 @@ export default new Vuex.Store({
         },
         setGameSession(state, gameSession){
             state.gameSession = gameSession;
+        },
+        socketUpdateMatrix(state, matrix){
+            state.matrix = matrix
+        },
+        updateTurn(state, turn){
+            state.turn = turn
         }
     },
     actions: {
-        signup({commit, state}, payload){
+        signup({state}, payload){
             if(payload.username && payload.name && payload.idGame){
                 state.feedback = '';
 
@@ -106,7 +113,8 @@ export default new Vuex.Store({
                                                 position: '22',
                                                 text: ' '
                                             }]
-                                        ]
+                                        ],
+                                        turn: 'X'
                                     })
                                     .then(response => {
                                         router.push({path: `/game/${payload.idGame}`})
@@ -171,18 +179,43 @@ export default new Vuex.Store({
                 commit('setGame', game);
             })
         },
-        getGameSession({commit}, payload){
+        getGameSession({commit, state}, payload){
             axios.get(`${server.mainServe}/gameSessions`)
             .then(response => {
                 response.data.forEach(session => {
                     if(session.idGame == payload.id){
                         var gameSession = session;
+                        state.matrix = session.matrix;
+                        state.turn = session.turn;
+                        
                         commit('setGameSession', gameSession);
                     }
                 })
                 
             })
-        }
+        },
+        updateMatrix({state}, payload){
+            axios.put(`${server.mainServe}/gameSessions/edit/${payload.id}`, { 
+                data: payload.data 
+            })
+            .then(response => {
+                // console.log(response);
+            })
+        },
+        socketMatrix({commit}, payload){
+            const matrix = payload.matrix
+            commit('socketUpdateMatrix', matrix)
+        },
+        updateTurn({commit}, payload){
+            axios.put(`${server.mainServe}/gameSessions/turn/${payload.id}`,{
+                turn: payload.turn
+            })
+            .then(response => {
+                const turn = payload.turn
+                commit('updateTurn', turn)
+            })
+            
+        },
     },
     getters: {
         

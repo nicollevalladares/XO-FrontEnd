@@ -1,6 +1,10 @@
+import store from '@/store'
+
 class Game {
     constructor() {
       this.players = []
+
+      //Combinations to win
       this.winningCondition = [
         ["00", "01", "02"], 
         ["00", "11", "22"],
@@ -11,14 +15,21 @@ class Game {
         ["01", "11", "21"],
         ["20", "21", "22"]
       ];
+
       this.currentTurn = "X";
       this.isGameEnded = false;
-      this._winningConditions =
-        this.winningCondition.map(x => x.join(","));
+
+      //Join the combinations and separate them with commas
+      this._winningConditions = this.winningCondition.map(x => x.join(","));
+
     }
-    changeTurn() {
+
+    changeTurn(id) {
       this.currentTurn = this.currentTurn == this.players[0].sign ? this.players[1].sign : this.players[0].sign;
+
+      store.dispatch('updateTurn',{id, turn: this.currentTurn});
     }
+
     reset() {
       this.currentTurn = this.players[0].sign;
       this.players.forEach(x => {
@@ -58,6 +69,7 @@ class Game {
         return false;
       }
     }
+
     isGameOver(player1_common, player2_common) {
   
       if (player1_common.length < 1 && player2_common.length < 1)
@@ -101,5 +113,6 @@ class Game {
       return combinations;
     }
   }
+
   export default Game;
   
