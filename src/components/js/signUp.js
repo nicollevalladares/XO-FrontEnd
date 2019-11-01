@@ -18,13 +18,15 @@ export default {
                 store.dispatch('signup', {
                     name: this.userData.name,
                     username: this.userData.username,
-                    idGame: this.$route.params.id
+                    idGame: this.$route.params.id,
+                    currentPlayer: '2'
                 })
             }
             else{
                 store.dispatch('signup', {
                     name: this.userData.name,
-                    username: this.userData.username
+                    username: this.userData.username,
+                    currentPlayer: '1'
                 })
             }
             

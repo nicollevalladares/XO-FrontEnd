@@ -28,7 +28,7 @@ export default new Vuex.Store({
         gameInfo: '',
         gameSession: '',
         matrix: '',
-        turn: ''
+        currentPlayer: ''
     },
     mutations: {
         setGame(state, game){
@@ -39,14 +39,11 @@ export default new Vuex.Store({
         },
         socketUpdateMatrix(state, matrix){
             state.matrix = matrix
-        },
-        updateTurn(state, turn){
-            state.turn = turn
         }
     },
     actions: {
         signup({state}, payload){
-            if(payload.username && payload.name && payload.idGame){
+            if(payload.username && payload.name && payload.idGame && payload.currentPlayer){
                 state.feedback = '';
 
                 axios.get(`${server.mainServe}/users`)
@@ -114,7 +111,9 @@ export default new Vuex.Store({
                                                 text: ' '
                                             }]
                                         ],
-                                        turn: 'X'
+                                        currentPlayer: '1',
+                                        owner: ['','',''],
+                                        guest: ['','','']
                                     })
                                     .then(response => {
                                         router.push({path: `/game/${payload.idGame}`})
@@ -131,8 +130,11 @@ export default new Vuex.Store({
                     console.log(err);
                     
                 })
+
+                state.currentPlayer = payload.currentPlayer;
+
             }
-            else if(payload.username && payload.name){
+            else if(payload.username && payload.name && payload.currentPlayer){
                 state.feedback = '';
 
                 axios.get(`${server.mainServe}/users`)
@@ -167,6 +169,8 @@ export default new Vuex.Store({
                     console.log(err);
                     
                 })
+
+                state.currentPlayer = payload.currentPlayer;
             }
             else{
                 state.feedback = 'Por favor debe llenar todos los campos.';
@@ -187,7 +191,7 @@ export default new Vuex.Store({
                         var gameSession = session;
                         state.matrix = session.matrix;
                         state.turn = session.turn;
-                        
+
                         commit('setGameSession', gameSession);
                     }
                 })
@@ -206,16 +210,98 @@ export default new Vuex.Store({
             const matrix = payload.matrix
             commit('socketUpdateMatrix', matrix)
         },
-        updateTurn({commit}, payload){
-            axios.put(`${server.mainServe}/gameSessions/turn/${payload.id}`,{
-                turn: payload.turn
+        updatePosition({state}, payload){
+            if(payload.text == 'X'){
+                if(state.gameSession.owner[0] != ''){
+                    const positions = [];
+                    state.gameSession.owner.forEach(position => {
+                        positions.push(position)
+                    })
+                    positions.push(payload.position)
+
+                    axios.put(`${server.mainServe}/gameSessions/owner/${payload.id}`,{
+                        positions: positions
+                    })
+                    .then(response => {
+                        state.gameSession.owner = positions;
+                        
+                        axios.put(`${server.mainServe}/gameSessions/currentPlayer/${payload.id}`,{
+                            currentPlayer: '2'
+                        })
+                        .then(response => {
+                            console.log(response);
+                        })
+                    })
+                }
+                else{
+                    var data = []
+                    data.push(payload.position)
+
+                    axios.put(`${server.mainServe}/gameSessions/owner/${payload.id}`,{
+                        positions: data
+                    })
+                    .then(response => {
+                        state.gameSession.owner = data;
+                        
+                        axios.put(`${server.mainServe}/gameSessions/currentPlayer/${payload.id}`,{
+                            currentPlayer: '2'
+                        })
+                        .then(response => {
+                            console.log(response);
+                        })
+                    })
+                }
+            }
+            else if(payload.text == 'O'){
+                if(state.gameSession.guest[0] != ''){
+                    const positions = [];
+                    state.gameSession.guest.forEach(position => {
+                        positions.push(position)
+                    })
+                    positions.push(payload.position)
+
+                    axios.put(`${server.mainServe}/gameSessions/guest/${payload.id}`,{
+                        positions: positions
+                    })
+                    .then(response => {
+                        state.gameSession.guest = positions;
+                        
+                        axios.put(`${server.mainServe}/gameSessions/currentPlayer/${payload.id}`,{
+                            currentPlayer: '1'
+                        })
+                        .then(response => {
+                            console.log(response);
+                        })
+                    })
+                }
+                else{
+                    var data = []
+                    data.push(payload.position)
+
+                    axios.put(`${server.mainServe}/gameSessions/guest/${payload.id}`,{
+                        positions: data
+                    })
+                    .then(response => {
+                        state.gameSession.guest = data;
+
+                        axios.put(`${server.mainServe}/gameSessions/currentPlayer/${payload.id}`,{
+                            currentPlayer: '1'
+                        })
+                        .then(response => {
+                            console.log(response);
+                        })
+                    })
+                }
+            }
+        },
+        saveWinner({state}, payload){
+            axios.put(`${server.mainServe}/gameSessions/winner/${payload.id}`,{
+                winner: payload.winner
             })
             .then(response => {
-                const turn = payload.turn
-                commit('updateTurn', turn)
+                console.log(response);
             })
-            
-        },
+        }
     },
     getters: {
         
