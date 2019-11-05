@@ -2,16 +2,18 @@
     <div>
         <div class="text-center">
             <h1>Juego X-0</h1>
+            <br>
+            <p v-if="gameSession.number">PARTIDA NUMERO {{gameSession.number}}</p>
             <div class="score">
                 <span>PUNTAJE</span>
                 <br>
-                <span id="p1_score">Creador - {{gameInfo.owner}} : </span>
+                <span id="p1_score">Creador - {{gameInfo.owner}} : {{ownerWins}}</span>
                 <br>
                 <span 
                     id="p2_score"
                     v-if="gameInfo.guest"
                 >
-                    Invitado - {{gameInfo.guest}} :
+                    Invitado - {{gameInfo.guest}} : {{guestWins}}
                 </span>
 
                 <a v-if="!gameInfo.guest" target="_blank" :href="link">Invitar jugador</a>

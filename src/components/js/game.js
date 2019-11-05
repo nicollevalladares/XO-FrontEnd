@@ -23,7 +23,11 @@ export default {
             isGameEnded: false,
             _winningConditions: '',
             owner: [],
-            guest: []
+            guest: [],
+            winner: null,
+            winners: [],
+            ownerWins: 0,
+            guestWins: 0
         }
     },
     methods: {
@@ -85,10 +89,8 @@ export default {
 
         //check if game won
         setTimeout(() => {
-            console.log(this.checkWinner());
             if (this.checkWinner() == true) {
-                
-                this.resetGame();
+                store.dispatch('newSession',{idGame: this.$route.params.id});
             }
         }, 100);
         },
@@ -114,32 +116,39 @@ export default {
             }
         },
         isGameOver(owner_common, guest_common) {
-  
             if (owner_common.length < 1 && guest_common.length < 1)
               return false;
         
             let gameOver = false;
+
             if (owner_common > guest_common) {
                 gameOver = true
                 store.dispatch('saveWinner', {
                     winner: this.gameInfo.owner,
                     id: this.gameSession.id
                 })
+
             } else if (guest_common > owner_common) {
-              gameOver = true
-              store.dispatch('saveWinner', {
-                winner: this.gameInfo.guest,
-                id: this.gameSession.id
-            })
-            } 
-            // else if (this.players[0].clicks.length > 4 || this.players[1].clicks.length > 4) {
-            //   gameOver = true
-            //   this.drawScore += 1;
-            //   alert("Draw");
+                gameOver = true
+                store.dispatch('saveWinner', {
+                    winner: this.gameInfo.guest,
+                    id: this.gameSession.id
+                })
+            }
+
+            // No winner
+            
+            // else if (owner_common == guest_common) {
+            //     gameOver = true;
+            //     store.dispatch('saveWinner', {
+            //         winner: 'none',
+            //         id: this.gameSession.id
+            //     })
             // } 
             else {
               gameOver = false
             }
+
             return gameOver;
         },
         getCombination(input, len, start) {
@@ -158,20 +167,9 @@ export default {
               }
             }
             return combinations;
-        },
-        // resetGame() {
-        // //UI reset
-        // this.game.reset();
-        // [...this.buttons].forEach(btn => {
-        //     // this.btnText[btn.id] = "";
-        // });
-        // }
+        }
     },
     mounted() {
-        this.$nextTick(() => {
-            this.buttons = this.$el.querySelectorAll(".gamebox button");
-            this.resetGame();
-        });
         
     },
     created(){
@@ -184,11 +182,74 @@ export default {
 
             this.owner = data.owner;
             this.guest = data.guest;
+
+            if(data.winner){
+                this.winner = data.winner;
+            }
         });
 
 
         this.sockets.subscribe('gameUpdate', (data) => {
             store.dispatch('getGame',{id: data.idGame})
+
+            if(data.winners){
+                this.ownerWins = 0;
+                this.guestWins = 0;
+
+                this.winners = data.winners;
+
+                data.winners.forEach(winner => {
+                    if(winner == this.gameInfo.owner){
+                        this.ownerWins++;
+                    }
+                    else if(winner == this.gameInfo.guest){
+                        this.guestWins++;
+                    }
+                })
+
+                data = [
+                    [{
+                        position: '00',
+                        text: ' '
+                    }, 
+                    {
+                        position: '01',
+                        text: ' '
+                    },
+                    {
+                        position: '02',
+                        text: ' '
+                    }], 
+                    //10 11 12
+                    [{
+                        position: '10',
+                        text: ' '
+                    }, 
+                    {
+                        position: '11',
+                        text: ' '
+                    },
+                    {
+                        position: '12',
+                        text: ' '
+                    }], 
+                    //20 21 22
+                    [{
+                        position: '20',
+                        text: ' '
+                    }, 
+                    {
+                        position: '21',
+                        text: ' '
+                    },
+                    {
+                        position: '22',
+                        text: ' '
+                    }]
+                ];
+
+                store.dispatch('socketMatrix',{matrix: data});
+            }
         });
 
         this.sockets.subscribe('sessionAdded', (data) => {

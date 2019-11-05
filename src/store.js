@@ -28,7 +28,10 @@ export default new Vuex.Store({
         gameInfo: '',
         gameSession: '',
         matrix: '',
-        currentPlayer: ''
+        currentPlayer: '',
+        count: 0,
+        sum: 0,
+        winner: ''
     },
     mutations: {
         setGame(state, game){
@@ -229,7 +232,7 @@ export default new Vuex.Store({
                             currentPlayer: '2'
                         })
                         .then(response => {
-                            console.log(response);
+                            
                         })
                     })
                 }
@@ -247,7 +250,7 @@ export default new Vuex.Store({
                             currentPlayer: '2'
                         })
                         .then(response => {
-                            console.log(response);
+                            
                         })
                     })
                 }
@@ -270,7 +273,7 @@ export default new Vuex.Store({
                             currentPlayer: '1'
                         })
                         .then(response => {
-                            console.log(response);
+                            
                         })
                     })
                 }
@@ -288,18 +291,135 @@ export default new Vuex.Store({
                             currentPlayer: '1'
                         })
                         .then(response => {
-                            console.log(response);
+                            
                         })
                     })
                 }
             }
         },
         saveWinner({state}, payload){
+            state.winner = payload.winner;
+
             axios.put(`${server.mainServe}/gameSessions/winner/${payload.id}`,{
                 winner: payload.winner
             })
             .then(response => {
-                console.log(response);
+                axios.put(`${server.mainServe}/gameSessions/currentPlayer/${payload.id}`,{
+                    currentPlayer: '1'
+                })
+                .then(response => {
+                })
+            })
+        },
+        newSession({commit, state}, payload){
+            axios.get(`${server.mainServe}/gameSessions`)
+            .then(response => {
+                state.count = 0;
+                state.sum = 0;
+                if(response.data.length > state.sum){
+                    response.data.forEach(session => {
+                        if(session.idGame == payload.idGame){
+                            state.count++;
+                        }
+
+                        state.sum++;
+                    })
+                }
+                
+                state.count++;
+
+                if(response.data.length = state.sum){
+                    axios.post(`${server.mainServe}/gameSessions`, {
+                        idGame: payload.idGame,
+                        number: state.count,
+                        matrix: [
+                            //00 01 02
+                            [{
+                                position: '00',
+                                text: ' '
+                            }, 
+                            {
+                                position: '01',
+                                text: ' '
+                            },
+                            {
+                                position: '02',
+                                text: ' '
+                            }], 
+                            //10 11 12
+                            [{
+                                position: '10',
+                                text: ' '
+                            }, 
+                            {
+                                position: '11',
+                                text: ' '
+                            },
+                            {
+                                position: '12',
+                                text: ' '
+                            }], 
+                            //20 21 22
+                            [{
+                                position: '20',
+                                text: ' '
+                            }, 
+                            {
+                                position: '21',
+                                text: ' '
+                            },
+                            {
+                                position: '22',
+                                text: ' '
+                            }]
+                        ],
+                        currentPlayer: '1',
+                        owner: ['','',''],
+                        guest: ['','','']
+                    })
+                    .then(response => {
+                        axios.get(`${server.mainServe}/gameSessions/${response.data.id}`)
+                        .then(response => {
+                            var gameSession = response.data.gameSession;
+                            var matrix = response.data.gameSession.matrix;
+
+                            commit('setGameSession', gameSession);
+                            commit('socketUpdateMatrix', matrix);
+                            
+                            axios.get(`${server.mainServe}/games/${payload.idGame}`)
+                            .then(response => {
+                                if(response.data.game.winners){
+                                    const dataWinners = []
+                                    
+                                    response.data.game.winners.forEach(winner => {
+                                        dataWinners.push(winner)
+                                    })
+
+                                    dataWinners.push(state.winner);
+
+                                    axios.put(`${server.mainServe}/games/winners/${payload.idGame}`, {
+                                        winners: dataWinners
+                                    })
+                                    .then(response => {
+                                        router.push({path: `/game/${payload.idGame}`})
+                                    })
+                                }
+                                else {
+                                    const winner = []
+                                    winner.push(state.winner);
+
+                                    axios.put(`${server.mainServe}/games/winners/${payload.idGame}`, {
+                                        winners: winner
+                                    })
+                                    .then(response => {
+                                        router.push({path: `/game/${payload.idGame}`})
+                                    })
+                                }
+                            })
+                        })
+                    })
+                }
+                
             })
         }
     },
